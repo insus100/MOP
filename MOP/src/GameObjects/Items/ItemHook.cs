@@ -173,7 +173,6 @@ namespace MOP
             
             rb.isKinematic = !enabled;
             rb.useGravity = enabled;
-            rb.constraints = enabled ? RigidbodyConstraints.None : RigidbodyConstraints.FreezeAll;
         }
 
         /// <summary>

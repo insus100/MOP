@@ -576,7 +576,7 @@ namespace MOP
                         ItemHook hook = Items.instance.ItemsHooks[i];
 
                         float distance = Vector3.Distance(player.transform.position, hook.transform.position);
-                        bool toPhysicsEnable = distance < 10;
+                        bool toPhysicsEnable = IsItemEnabled(distance);
                         bool toEnable = IsEnabled(distance, 150);
                         hook.TogglePhysics(toPhysicsEnable);
                         hook.ToggleActive(toEnable);
@@ -687,6 +687,12 @@ namespace MOP
             if (inSectorMode)
                 toggleDistance = 30;
 
+            return distance < toggleDistance;
+        }
+
+        bool IsItemEnabled(float distance)
+        {
+            int toggleDistance = inSectorMode ? 5 : isPlayerAtYard ? 10 : 30;
             return distance < toggleDistance;
         }
 
