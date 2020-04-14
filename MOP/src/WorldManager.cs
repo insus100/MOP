@@ -551,8 +551,6 @@ namespace MOP
                 // And the opposite happens if we disable vehicles before disabling items.
                 // So if we are disabling items, we need to do that BEFORE we disable vehicles.
                 // And we need to enable items AFTER we enable vehicles.
-                itemsToEnable.Clear();
-                itemsToDisable.Clear();
                 for (i = 0; i < Items.instance.ItemsHooks.Count; i++)
                 {
                     if (half != 0)
@@ -575,36 +573,17 @@ namespace MOP
                             continue;
                         }
 
-                        bool toEnable = IsEnabled(Items.instance.ItemsHooks[i].transform, 150);
-                        if (toEnable)
-                            itemsToEnable.Add(Items.instance.ItemsHooks[i]);
-                        else
-                            itemsToDisable.Add(Items.instance.ItemsHooks[i]);
+                        ItemHook hook = Items.instance.ItemsHooks[i];
+
+                        float distance = Vector3.Distance(player.transform.position, hook.transform.position);
+                        bool toPhysicsEnable = distance < 10;
+                        bool toEnable = IsEnabled(distance, 150);
+                        hook.TogglePhysics(toPhysicsEnable);
+                        hook.ToggleActive(toEnable);
                     }
                     catch (Exception ex)
                     {
                         ExceptionManager.New(ex, "ITEM_TOGGLE_GATHER_ERROR");
-                    }
-                }
-
-                // Items To Disable
-                int full = itemsToDisable.Count;
-                if (full > 0)
-                {
-                    half = itemsToDisable.Count / 2;
-                    for (i = 0; i < full; i++)
-                    {
-                        if (half != 0)
-                            if (i % half == 0) yield return null;
-
-                        try
-                        {
-                            itemsToDisable[i].ToggleActive(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            ExceptionManager.New(ex, "ITEM_TOGGLE_ENABLE_ERROR");
-                        }
                     }
                 }
 
@@ -632,27 +611,6 @@ namespace MOP
                     catch (Exception ex)
                     {
                         ExceptionManager.New(ex, $"VEHICLE_TOGGLE_ERROR_{i}");
-                    }
-                }
-
-                // Items To Enable
-                full = itemsToEnable.Count;
-                if (full > 0)
-                {
-                    half = itemsToEnable.Count / 2;
-                    for (i = 0; i < full; i++)
-                    {
-                        if (half != 0)
-                            if (i % half == 0) yield return null;
-
-                        try
-                        {
-                            itemsToEnable[i].ToggleActive(true);
-                        }
-                        catch (Exception ex)
-                        {
-                            ExceptionManager.New(ex, "ITEM_TOGGLE_ENABLE_ERROR");
-                        }
                     }
                 }
 
@@ -707,6 +665,16 @@ namespace MOP
             }
 
             return Vector3.Distance(player.transform.position, target.position) < toggleDistance * MopSettings.ActiveDistanceMultiplicationValue;
+        }
+
+        bool IsEnabled(float distance, float toggleDistance = 200)
+        {
+            if (inSectorMode)
+            {
+                toggleDistance *= MopSettings.ActiveDistance == 0 ? 0.2f : 0.1f;
+            }
+
+            return distance < toggleDistance * MopSettings.ActiveDistanceMultiplicationValue;
         }
 
         /// <summary>
@@ -786,6 +754,7 @@ namespace MOP
                 // Items
                 for (int i = 0; i < Items.instance.ItemsHooks.Count; i++)
                 {
+                    Items.instance.ItemsHooks[i].TogglePhysics(enabled);
                     Items.instance.ItemsHooks[i].ToggleActive(enabled);
 
                     // If we're saving, MOP forces on items the "SAVEGAME" event.

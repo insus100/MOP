@@ -33,7 +33,7 @@ namespace MOP
         /// <summary>
         /// Rigidbody of this object.
         /// </summary>
-        Rigidbody rb;
+        public Rigidbody rb;
 
         /// <summary>
         /// Object's renderer
@@ -123,7 +123,7 @@ namespace MOP
         {
             try
             {
-                if (rb == null || rb.useGravity == enabled)
+                if (rb == null || rb.detectCollisions == enabled)
                     return;
 
                 if (this.gameObject.name == "wheel_regula" && this.gameObject.transform.parent.gameObject.name == "pivot_wheel_standard")
@@ -151,9 +151,6 @@ namespace MOP
                 }
 
                 rb.detectCollisions = enabled;
-                rb.isKinematic = !enabled;
-                rb.useGravity = enabled;
-                rb.constraints = enabled ? RigidbodyConstraints.None : RigidbodyConstraints.FreezeAll;
 
                 if (enabled)
                 {
@@ -168,6 +165,15 @@ namespace MOP
                     renderer.enabled = enabled;
             }
             catch { }
+        }
+
+        public void TogglePhysics(bool enabled)
+        {
+            if (rb == null || rb.useGravity == enabled || (rb.velocity.magnitude > 0.1f && !enabled)) return;
+            
+            rb.isKinematic = !enabled;
+            rb.useGravity = enabled;
+            rb.constraints = enabled ? RigidbodyConstraints.None : RigidbodyConstraints.FreezeAll;
         }
 
         /// <summary>
